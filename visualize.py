@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import os
 import sys
 import requests
@@ -130,8 +132,8 @@ def plot_views(df):
 
     fig.savefig(OUTPUT_FILE, dpi=150, bbox_inches="tight")
     print(f"Chart saved to {OUTPUT_FILE}")
+    plt.close(fig)
     send_to_telegram(OUTPUT_FILE)
-    plt.show()
 
 
 def main():
