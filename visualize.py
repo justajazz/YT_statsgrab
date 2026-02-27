@@ -1,4 +1,6 @@
+import os
 import sys
+import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -30,6 +32,24 @@ def group_by_day(df):
     )
     daily["Date"] = pd.to_datetime(daily["Date"])
     return daily
+
+
+def send_to_telegram(image_path):
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        print("Telegram: BOT_TOKEN or CHAT_ID not set, skipping notification")
+        return
+    url = f"https://api.telegram.org/bot{token}/sendPhoto"
+    try:
+        with open(image_path, "rb") as photo:
+            response = requests.post(url, data={"chat_id": chat_id}, files={"photo": photo}, timeout=10)
+        if response.ok:
+            print("Telegram: Chart sent successfully")
+        else:
+            print(f"Telegram: Failed to send ({response.status_code})")
+    except requests.exceptions.ConnectionError:
+        print("Telegram: No connection, skipping notification")
 
 
 def plot_views(df):
@@ -110,6 +130,7 @@ def plot_views(df):
 
     fig.savefig(OUTPUT_FILE, dpi=150, bbox_inches="tight")
     print(f"Chart saved to {OUTPUT_FILE}")
+    send_to_telegram(OUTPUT_FILE)
     plt.show()
 
 
