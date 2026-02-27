@@ -1,6 +1,8 @@
 import os
 import re
 import csv
+import subprocess
+import sys
 import requests
 from datetime import datetime
 
@@ -137,6 +139,9 @@ def main():
                 "Videos": r["videos"],
             })
     print(f"\nAppended {len(results)} row(s) to {csv_file}")
+
+    # Trigger visualize.py automatically after a successful data collection
+    subprocess.run([sys.executable, "visualize.py"], check=True)
 
 
 if __name__ == "__main__":
