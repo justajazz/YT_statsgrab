@@ -10,3 +10,4 @@ views_*.csv
 cumulative_stats.csv
 growth_chart.png
 growth_chart.png
+.claude/
