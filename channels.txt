@@ -1,2 +1,4 @@
-https://www.youtube.com/@YevgeniyKovalenko
-https://www.youtube.com/@neuropros
+# Add one channel per line. Supported formats:
+# https://www.youtube.com/@ChannelHandle
+# @ChannelHandle
+# UCxxxxxxxxxxxxxxxxxxxxxx
