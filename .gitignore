@@ -1,4 +1,5 @@
 start_bot.bat
+CLAUDE.md
 node_modules/
 .env
 dist/
