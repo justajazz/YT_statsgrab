@@ -36,20 +36,89 @@ def group_by_day(df):
     return daily
 
 
-def send_to_telegram(image_path):
+def build_stats_message(df):
+    """Build an HTML-formatted stats table with deltas vs previous record."""
+    dates = sorted(df["Date"].dt.date.unique())
+    latest_date = dates[-1]
+    prev_date = dates[-2] if len(dates) >= 2 else None
+
+    latest_df = df[df["Date"].dt.date == latest_date]
+    prev_df = df[df["Date"].dt.date == prev_date] if prev_date else None
+
+    def fmt_delta(delta):
+        if delta is None:
+            return ""
+        sign = "+" if delta >= 0 else ""
+        return f" ({sign}{delta:,})"
+
+    def fmt_int(val):
+        if pd.isna(val):
+            return None
+        return int(val)
+
+    lines = [f"📊 <b>Stats — {latest_date}</b>\n"]
+
+    for _, row in latest_df.iterrows():
+        name = row["ChannelName"]
+        subs = fmt_int(row["Subscribers"])
+        views = fmt_int(row["Views"])
+        videos = fmt_int(row["Videos"])
+
+        subs_delta = views_delta = videos_delta = None
+        if prev_df is not None:
+            prev_row = prev_df[prev_df["ChannelName"] == name]
+            if not prev_row.empty:
+                pr = prev_row.iloc[0]
+                if views is not None and pd.notna(pr["Views"]):
+                    views_delta = views - int(pr["Views"])
+                if videos is not None and pd.notna(pr["Videos"]):
+                    videos_delta = videos - int(pr["Videos"])
+                if subs is not None and pd.notna(pr["Subscribers"]):
+                    subs_delta = subs - int(pr["Subscribers"])
+
+        subs_str = f"{subs:,}{fmt_delta(subs_delta)}" if subs is not None else "Hidden"
+        views_str = f"{views:,}{fmt_delta(views_delta)}" if views is not None else "—"
+        videos_str = f"{videos:,}{fmt_delta(videos_delta)}" if videos is not None else "—"
+
+        lines.append(f"<b>{name}</b>")
+        lines.append(f"  👥 Subscribers: {subs_str}")
+        lines.append(f"  👁 Views:       {views_str}")
+        lines.append(f"  🎬 Videos:      {videos_str}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
+
+
+def send_to_telegram(image_path, stats_text=None):
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     if not token or not chat_id:
         print("Telegram: BOT_TOKEN or CHAT_ID not set, skipping notification")
         return
-    url = f"https://api.telegram.org/bot{token}/sendPhoto"
+
+    base_url = f"https://api.telegram.org/bot{token}"
+
     try:
+        if stats_text:
+            resp = requests.post(
+                f"{base_url}/sendMessage",
+                data={"chat_id": chat_id, "text": stats_text, "parse_mode": "HTML"},
+                timeout=10,
+            )
+            if not resp.ok:
+                print(f"Telegram: Failed to send stats text ({resp.status_code})")
+
         with open(image_path, "rb") as photo:
-            response = requests.post(url, data={"chat_id": chat_id}, files={"photo": photo}, timeout=10)
-        if response.ok:
+            resp = requests.post(
+                f"{base_url}/sendPhoto",
+                data={"chat_id": chat_id},
+                files={"photo": photo},
+                timeout=10,
+            )
+        if resp.ok:
             print("Telegram: Chart sent successfully")
         else:
-            print(f"Telegram: Failed to send ({response.status_code})")
+            print(f"Telegram: Failed to send chart ({resp.status_code})")
     except requests.exceptions.ConnectionError:
         print("Telegram: No connection, skipping notification")
 
@@ -133,7 +202,6 @@ def plot_views(df):
     fig.savefig(OUTPUT_FILE, dpi=150, bbox_inches="tight")
     print(f"Chart saved to {OUTPUT_FILE}")
     plt.close(fig)
-    send_to_telegram(OUTPUT_FILE)
 
 
 def main():
@@ -145,6 +213,8 @@ def main():
 
     print(f"Loaded {len(df)} rows across {df['ChannelName'].nunique()} channel(s).")
     plot_views(df)
+    stats_text = build_stats_message(df)
+    send_to_telegram(OUTPUT_FILE, stats_text)
 
 
 if __name__ == "__main__":
