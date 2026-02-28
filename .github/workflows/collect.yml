@@ -26,6 +26,9 @@ jobs:
       - name: Write Google token
         run: echo '${{ secrets.GOOGLE_TOKEN_JSON }}' > token.json
 
+      - name: Write channels list
+        run: echo '${{ secrets.CHANNELS_LIST }}' > channels.txt
+
       - name: Collect stats and send to Telegram
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
