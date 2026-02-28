@@ -28,8 +28,9 @@ https://github.com/justajazz/YT_statsgrab (default branch: `master`)
 - `YOUTUBE_API_KEY` — YouTube Data API v3
 - `TELEGRAM_BOT_TOKEN` — Telegram bot token
 - `TELEGRAM_CHAT_ID` — Telegram chat ID
-- `GOOGLE_SHEET_ID` — Google Sheet ID
+- `GOOGLE_SHEET_ID` — Google Sheet ID: `1950kW-VbLXJI8FarpUpu7B3d-gMQJ0AGfDlqX4snJrw`
 - `GOOGLE_TOKEN_JSON` — OAuth2 token JSON (for GitHub Actions)
+- `CHANNELS_LIST` — list of tracked channels (private, stored as GitHub Secret)
 
 ## Key architectural decisions
 - **Google Sheets** instead of CSV — data in the cloud, no git commits needed after each run
@@ -51,7 +52,7 @@ No git commit needed — data goes to Google Sheets.
 ## Google Sheets setup (one-time)
 1. Google Cloud Console → enable Sheets API → create OAuth 2.0 Client ID (Desktop) → download credentials.json
 2. Run `python setup_sheets.py` → browser login → token.json created
-3. Add to GitHub Secrets: `GOOGLE_SHEET_ID`, `GOOGLE_TOKEN_JSON` (contents of token.json)
+3. Add to GitHub Secrets: `GOOGLE_SHEET_ID`, `GOOGLE_TOKEN_JSON` (contents of token.json), `CHANNELS_LIST` (list of channels)
 
 ## Dependencies
 `requests`, `pandas`, `matplotlib`, `python-telegram-bot>=20.0`, `gspread>=6.0`, `google-auth`, `google-auth-oauthlib`
