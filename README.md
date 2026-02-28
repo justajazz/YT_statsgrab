@@ -86,11 +86,13 @@ git push
 
 ## Telegram bot (local)
 
-Manage tracked channels directly from Telegram:
+`bot.py` runs on your local machine and lets you manage channels directly from Telegram.
+It only responds to messages from your own `TELEGRAM_CHAT_ID` — all other users are rejected.
 
-```bash
-python bot.py
-```
+> **Note:** The bot works only while your computer is on and connected to the internet.
+> GitHub Actions handles data collection independently — the bot is not required for that.
+
+### Commands
 
 | Command | Action |
 |---|---|
@@ -99,7 +101,38 @@ python bot.py
 | `/remove <channel>` | Remove a channel |
 | `/run` | Collect stats right now |
 
-> `bot.py` is for local use only — GitHub Actions does not use it.
+### Run manually
+
+```bash
+python bot.py
+```
+
+### Auto-start on Windows login
+
+Create a file `start_bot.bat` in the project folder:
+
+```bat
+@echo off
+cd /d "C:\path\to\YT_statsgrab"
+start /min "" pythonw bot.py
+```
+
+Then place a shortcut to it in your Windows Startup folder:
+```
+Win+R → shell:startup → paste shortcut here
+```
+
+The bot will start automatically in the background every time you log in.
+
+### Managing channels without the bot (from mobile)
+
+If your computer is off, you can still manage the project via GitHub:
+
+| Task | How |
+|---|---|
+| View channels | Open `channels.txt` on GitHub |
+| Add / remove channel | Edit `channels.txt` on GitHub (pencil icon) |
+| Run collection now | Actions → Collect YouTube Stats → Run workflow |
 
 ## GitHub Actions setup
 
