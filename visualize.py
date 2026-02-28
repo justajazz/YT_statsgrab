@@ -42,8 +42,8 @@ def build_stats_message(df):
     latest_date = dates[-1]
     prev_date = dates[-2] if len(dates) >= 2 else None
 
-    latest_df = df[df["Date"].dt.date == latest_date]
-    prev_df = df[df["Date"].dt.date == prev_date] if prev_date else None
+    latest_df = df[df["Date"].dt.date == latest_date].drop_duplicates(subset="ChannelName", keep="last")
+    prev_df = df[df["Date"].dt.date == prev_date].drop_duplicates(subset="ChannelName", keep="last") if prev_date else None
 
     def fmt_delta(delta):
         if delta is None:
