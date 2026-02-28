@@ -7,18 +7,20 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-CSV_FILE = "cumulative_stats.csv"
+from sheets_client import get_sheet
+
 OUTPUT_FILE = "growth_chart.png"
 
 
-def load_data(csv_file):
-    try:
-        df = pd.read_csv(csv_file, parse_dates=["Date"])
-    except FileNotFoundError:
-        print(f"Error: {csv_file} not found. Run main.py first to collect data.")
+def load_data():
+    sheet = get_sheet()
+    rows = sheet.get_all_values()
+    if len(rows) < 2:
+        print("Error: Google Sheet has no data. Run main.py first to collect data.")
         sys.exit(1)
 
-    # Coerce numeric columns; "Hidden" subscriber counts become NaN
+    df = pd.DataFrame(rows[1:], columns=rows[0])
+    df["Date"] = pd.to_datetime(df["Date"])
     df["Views"] = pd.to_numeric(df["Views"], errors="coerce")
     df["Subscribers"] = pd.to_numeric(df["Subscribers"], errors="coerce")
     df["Videos"] = pd.to_numeric(df["Videos"], errors="coerce")
@@ -205,10 +207,10 @@ def plot_views(df):
 
 
 def main():
-    df = load_data(CSV_FILE)
+    df = load_data()
 
     if df.empty:
-        print("No data found in cumulative_stats.csv.")
+        print("No data found in Google Sheet.")
         return
 
     print(f"Loaded {len(df)} rows across {df['ChannelName'].nunique()} channel(s).")

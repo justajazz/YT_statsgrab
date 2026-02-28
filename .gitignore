@@ -1,6 +1,9 @@
 start_bot.bat
 run_bot.ps1
 CLAUDE.md
+credentials.json
+token.json
+setup_sheets.py
 node_modules/
 .env
 dist/

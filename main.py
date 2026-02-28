@@ -1,10 +1,11 @@
 import os
 import re
-import csv
 import subprocess
 import sys
 import requests
 from datetime import datetime
+
+from sheets_client import get_sheet
 
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/channels"
 
@@ -120,25 +121,17 @@ def main():
         print(f"{r['name']:<32} {r['views']:>14,} {subs:>14} {r['videos']:>8,}")
     print("=" * 72)
 
-    # Append to cumulative CSV
-    csv_file = "cumulative_stats.csv"
-    file_exists = os.path.exists(csv_file)
+    # Append to Google Sheet
     today = datetime.now().strftime("%Y-%m-%d")
-    with open(csv_file, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(
-            f, fieldnames=["Date", "ChannelName", "Views", "Subscribers", "Videos"]
-        )
-        if not file_exists:
-            writer.writeheader()
-        for r in results:
-            writer.writerow({
-                "Date": today,
-                "ChannelName": r["name"],
-                "Views": r["views"],
-                "Subscribers": r["subscribers"],
-                "Videos": r["videos"],
-            })
-    print(f"\nAppended {len(results)} row(s) to {csv_file}")
+    sheet = get_sheet()
+    if not sheet.get_all_values():
+        sheet.append_row(["Date", "ChannelName", "Views", "Subscribers", "Videos"])
+    rows = [
+        [today, r["name"], r["views"], r["subscribers"], r["videos"]]
+        for r in results
+    ]
+    sheet.append_rows(rows)
+    print(f"\nAppended {len(results)} row(s) to Google Sheet")
 
     # Trigger visualize.py automatically after a successful data collection
     subprocess.run([sys.executable, "visualize.py"], check=True)
