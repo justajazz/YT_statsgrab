@@ -19,6 +19,15 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 CHANNELS_FILE = "channels.txt"
 
 
+def is_authorized(update: Update) -> bool:
+    allowed = os.environ.get("TELEGRAM_CHAT_ID")
+    return str(update.effective_chat.id) == allowed
+
+
+async def deny(update: Update) -> None:
+    await update.message.reply_text("Not authorized.")
+
+
 def read_channels() -> list[str]:
     try:
         with open(CHANNELS_FILE, encoding="utf-8") as f:
@@ -34,6 +43,8 @@ def write_channels(channels: list[str]) -> None:
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_authorized(update):
+        return await deny(update)
     text = (
         "📺 <b>YouTube Stats Bot</b>\n\n"
         "Commands:\n"
@@ -48,6 +59,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def cmd_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_authorized(update):
+        return await deny(update)
     channels = read_channels()
     if not channels:
         await update.message.reply_text("No channels tracked. Use /add to add one.")
@@ -57,6 +70,8 @@ async def cmd_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def cmd_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_authorized(update):
+        return await deny(update)
     if not context.args:
         await update.message.reply_text("Usage: /add <channel_url_or_handle>")
         return
@@ -74,6 +89,8 @@ async def cmd_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def cmd_remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_authorized(update):
+        return await deny(update)
     if not context.args:
         await update.message.reply_text("Usage: /remove <channel_url_or_handle>")
         return
@@ -94,6 +111,8 @@ async def cmd_remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
 
 async def cmd_run(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_authorized(update):
+        return await deny(update)
     if not os.environ.get("YOUTUBE_API_KEY"):
         await update.message.reply_text(
             "❌ YOUTUBE_API_KEY is not set. Cannot collect data."
