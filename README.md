@@ -109,20 +109,34 @@ python bot.py
 
 ### Auto-start on Windows login
 
-Create a file `start_bot.bat` in the project folder:
+The recommended approach is Windows Task Scheduler — it starts the bot at login and automatically restarts it if it crashes.
 
-```bat
-@echo off
-cd /d "C:\path\to\YT_statsgrab"
-start /min "" pythonw bot.py
+Run this in PowerShell (no admin required):
+
+```powershell
+$action = New-ScheduledTaskAction `
+    -Execute "powershell.exe" `
+    -Argument "-WindowStyle Hidden -NonInteractive -File `"C:\path\to\YT_statsgrab\run_bot.ps1`"" `
+    -WorkingDirectory "C:\path\to\YT_statsgrab"
+
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+
+$settings = New-ScheduledTaskSettingsSet `
+    -RestartCount 99 `
+    -RestartInterval (New-TimeSpan -Minutes 1) `
+    -ExecutionTimeLimit 0 `
+    -MultipleInstances IgnoreNew
+
+Register-ScheduledTask -TaskName "YT_StatGrab_Bot" -Action $action -Trigger $trigger -Settings $settings -Force
 ```
 
-Then place a shortcut to it in your Windows Startup folder:
-```
-Win+R → shell:startup → paste shortcut here
+Create `run_bot.ps1` in the project folder:
+```powershell
+Set-Location "C:\path\to\YT_statsgrab"
+& "C:\path\to\YT_statsgrab\.venv\Scripts\python.exe" "C:\path\to\YT_statsgrab\bot.py"
 ```
 
-The bot will start automatically in the background every time you log in.
+The bot will start automatically in the background every time you log in, and restart within 1 minute if it crashes.
 
 ### Managing channels without the bot (from mobile)
 
