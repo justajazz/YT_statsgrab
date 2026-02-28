@@ -1,3 +1,4 @@
+start_bot.bat
 node_modules/
 .env
 dist/
