@@ -12,17 +12,22 @@ Every day at **09:00 UTC** GitHub Actions:
 
 **Example Telegram message:**
 ```
-📊 Stats — 2026-02-28
+📊 Stats — 2026-03-01
 
-@YevgeniyKovalenko
-  👥 Subscribers: 5,160 (+40)
-  👁 Views:       341,503 (+2,444)
-  🎬 Videos:      203
+TechReviews
+  👥 Subscribers: 124,500 (+320)
+  👁 Views:       8,412,300 (+15,200)
+  🎬 Videos:      347 (+1)
 
-@neuropros
-  👥 Subscribers: 3,190 (+50)
-  👁 Views:       87,112 (+1,726)
-  🎬 Videos:      88 (+1)
+ScienceDaily
+  👥 Subscribers: Hidden
+  👁 Views:       2,105,880 (+4,430)
+  🎬 Videos:      112
+
+GamersHub
+  👥 Subscribers: 58,200 (+150)
+  👁 Views:       3,987,640 (+8,910)
+  🎬 Videos:      203 (+2)
 ```
 
 ## Project structure
