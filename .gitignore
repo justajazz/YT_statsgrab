@@ -1,6 +1,8 @@
 start_bot.bat
 run_bot.ps1
 CLAUDE.md
+FOR_CLAUDE.md
+cumulative_stats.csv
 credentials.json
 token.json
 setup_sheets.py
