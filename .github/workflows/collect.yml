@@ -23,8 +23,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Write Google token
-        run: echo '${{ secrets.GOOGLE_TOKEN_JSON }}' > token.json
+      - name: Write service account key
+        run: echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > service_account.json
 
       - name: Write channels list
         run: echo '${{ secrets.CHANNELS_LIST }}' > channels.txt

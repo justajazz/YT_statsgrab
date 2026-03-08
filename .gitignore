@@ -5,6 +5,7 @@ FOR_CLAUDE.md
 cumulative_stats.csv
 credentials.json
 token.json
+service_account.json
 setup_sheets.py
 node_modules/
 .env
