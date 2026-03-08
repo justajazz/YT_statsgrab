@@ -10,13 +10,62 @@ Commands:
   /run     - Collect stats now and send chart to Telegram
 """
 
+import base64
 import os
 import sys
 import subprocess
+import requests
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 CHANNELS_FILE = "channels.txt"
+GITHUB_REPO = "justajazz/YT_statsgrab"
+GITHUB_SECRET_NAME = "CHANNELS_LIST"
+
+
+def sync_github_secret(channels: list[str]) -> bool:
+    """Update CHANNELS_LIST GitHub secret with current channel list.
+    Requires GITHUB_TOKEN env var (PAT with repo scope).
+    Returns True on success, False if token missing or request fails.
+    """
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        return False
+
+    try:
+        from nacl import encoding, public as nacl_public
+    except ImportError:
+        return False
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+    try:
+        resp = requests.get(
+            f"https://api.github.com/repos/{GITHUB_REPO}/actions/secrets/public-key",
+            headers=headers,
+            timeout=10,
+        )
+        if not resp.ok:
+            return False
+        key_data = resp.json()
+
+        pk = nacl_public.PublicKey(key_data["key"].encode("utf-8"), encoding.Base64Encoder())
+        sealed_box = nacl_public.SealedBox(pk)
+        encrypted = base64.b64encode(sealed_box.encrypt("\n".join(channels).encode("utf-8"))).decode("utf-8")
+
+        resp = requests.put(
+            f"https://api.github.com/repos/{GITHUB_REPO}/actions/secrets/{GITHUB_SECRET_NAME}",
+            headers=headers,
+            json={"encrypted_value": encrypted, "key_id": key_data["key_id"]},
+            timeout=10,
+        )
+        return resp.ok
+    except Exception:
+        return False
 
 
 def is_authorized(update: Update) -> bool:
@@ -85,7 +134,9 @@ async def cmd_add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     channels.append(channel)
     write_channels(channels)
-    await update.message.reply_text(f"✅ Added: <code>{channel}</code>", parse_mode="HTML")
+    synced = sync_github_secret(channels)
+    sync_note = " GitHub secret updated." if synced else ""
+    await update.message.reply_text(f"✅ Added: <code>{channel}</code>{sync_note}", parse_mode="HTML")
 
 
 async def cmd_remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -107,7 +158,9 @@ async def cmd_remove(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
     channels.remove(channel)
     write_channels(channels)
-    await update.message.reply_text(f"🗑 Removed: <code>{channel}</code>", parse_mode="HTML")
+    synced = sync_github_secret(channels)
+    sync_note = " GitHub secret updated." if synced else ""
+    await update.message.reply_text(f"🗑 Removed: <code>{channel}</code>{sync_note}", parse_mode="HTML")
 
 
 async def cmd_run(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
